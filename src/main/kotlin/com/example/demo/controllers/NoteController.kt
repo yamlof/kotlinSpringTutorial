@@ -4,8 +4,11 @@ import com.example.demo.controllers.NoteController.NoteResponse
 import com.example.demo.database.model.Note
 import com.example.demo.database.model.repository.NoteRepository
 import org.bson.types.ObjectId
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -22,7 +25,6 @@ class NoteController (
         val content:String,
         val color:Long,
         val id:String?,
-        val ownerId:String
     )
 
     data class NoteResponse(
@@ -34,7 +36,8 @@ class NoteController (
     )
 
     @PostMapping
-    fun save( body: NoteRequest ) : NoteResponse{
+    fun save(
+        @RequestBody body: NoteRequest ) : NoteResponse{
         val note = repository.save(
             Note(
                 id = body.id?.let { ObjectId(it)} ?: ObjectId.get(),
@@ -42,7 +45,7 @@ class NoteController (
                 content = body.content,
                 color = body.color,
                 createdAt = Instant.now(),
-                ownerId = ObjectId(body.ownerId)
+                ownerId = ObjectId()
 
             )
         )
@@ -56,6 +59,11 @@ class NoteController (
         return repository.findByOwnerId(ObjectId(ownerId)).map {
             it.toResponse()
         }
+    }
+
+    @DeleteMapping(path = ["/{id}"])
+    fun deleteById(@PathVariable id: String){
+        repository.deleteById(ObjectId(id))
     }
 }
 
